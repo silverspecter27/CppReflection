@@ -9,6 +9,10 @@ public:
     }
 
 private:
+    int& test_function() {
+        return test_static_int;
+    }
+
     int& test_function(int i) {
         std::cout << "test: " << i << '\n';
         return test_int;
@@ -32,6 +36,7 @@ REFLECT(Test1,
     END_FIELDS
 
     BEGIN_METHODS
+    METHOD(int& (), test_function)
     METHOD(int& (int), test_function)
     END_METHODS
 )
@@ -43,6 +48,10 @@ public:
     }
 
 private:
+    static int& test_function() {
+        return test_static_int;
+    }
+
     static int& test_function(int i) {
         std::cout << "test: " << i << '\n';
         return test_static_int;
@@ -66,13 +75,14 @@ REFLECT(Test2,
     END_FIELDS
 
     BEGIN_METHODS
+    STATIC_METHOD(int& (), test_function)
     STATIC_METHOD(int& (int), test_function)
     END_METHODS
 )
 
 int main() {
-    Test1 test1{ 20,  "Hello World!" };
-    Test2 test2{ 30, "Bye Bye World!" };
+    Test1 test1{ 25,  "Hello World!" };
+    Test2 test2{ 50, "Bye Bye World!" };
 
     // loop throught all fields
     cstd::for_each(refl::get_class<Test1>().get_fields(), [&](const auto& field) {
@@ -91,41 +101,41 @@ int main() {
     std::cout << '\n';
 
     // get method using a string c++ 20 or above
-    std::cout << refl::get_class<Test1>().get_field<"test_int">()(test1, 25) << '\n';
+    std::cout << refl::get_class<Test1>().get_field<"test_int">()(test1) << '\n';
 
     std::cout << '\n';
 
     // get method using a string c++ 20 or above
-    std::cout << refl::get_class<Test2>().get_field<"test_static_int">()(nullptr, 75) << '\n';
+    std::cout << refl::get_class<Test2>().get_field<"test_static_int">()(nullptr) << '\n';
 
     std::cout << '\n';
 
     // get method using a string c++ 20 or above
-    std::cout << refl::get_class<Test1>().get_method<"test_function">()(test1, 25) << '\n';
+    std::cout << refl::get_class<Test1>().get_method<"test_function">()(test1) << '\n';
 
     std::cout << '\n';
 
     // get method using a string c++ 20 or above
-    std::cout << refl::get_class<Test2>().get_method<"test_function">()(nullptr, 75) << '\n';
+    std::cout << refl::get_class<Test2>().get_method<"test_function">()(nullptr) << '\n';
 #endif // HAS_CONSTEXPR_STRING
 
     std::cout << '\n';
 
-    // get field using a tag
-    std::cout << refl::get_class<Test1>().get_field<refl::test_int>()(test1, 25) << '\n';
+    // changing field value using a tag
+    refl::get_class<Test1>().get_field<refl::test_int>()(test1) = 50;
 
     std::cout << '\n';
 
     // get field using a tag
-    std::cout << refl::get_class<Test2>().get_field<refl::test_static_int>()(nullptr, 75) << '\n';
+    refl::get_class<Test2>().get_field<refl::test_static_int>()(nullptr) = 75;
 
     std::cout << '\n';
 
-    // get method using a tag
-    std::cout << refl::get_class<Test1>().get_method<refl::test_function>()(test1, 25) << '\n';
+    // get method using a tag and using parameters
+    std::cout << refl::get_class<Test1>().get_method<refl::test_function, int>()(test1, 25) << '\n';
 
     std::cout << '\n';
 
-    // get method using a tag
-    std::cout << refl::get_class<Test2>().get_method<refl::test_function>()(nullptr, 75) << '\n';
+    // get method using a tag and using parameters
+    std::cout << refl::get_class<Test2>().get_method<refl::test_function, int>()(nullptr, 75) << '\n';
 }

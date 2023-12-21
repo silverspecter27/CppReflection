@@ -3,8 +3,6 @@
 #define REFLECTION_CLASS_HPP
 #include "ReflectionBase.hpp"
 
-#include <tuple>
-
 #include "Field.hpp"
 #include "Method.hpp"
 
@@ -51,24 +49,14 @@ public:
     }
 #endif // HAS_GET_FIELDS
 
-    template <class Tag>
-    _NODISCARD constexpr Get_method_by_tag_t_<Object, Tag> get_method() const {
-        return {};
-    }
-
-    template <class... Tags>
-    _NODISCARD constexpr std::tuple<Get_method_by_tag_t_<Object, Tags>...> get_methods() const {
+    template <class Tag, class... Args>
+    _NODISCARD constexpr Get_method_by_tag_t_<Object, Tag, std::tuple<Args...>> get_method() const {
         return {};
     }
 
 #if HAS_CONSTEXPR_STRING
-    template <cstd::constexpr_string Name>
-    _NODISCARD constexpr Get_method_t_<Object, Name> get_method() const {
-        return {};
-    }
-
-    template <cstd::constexpr_string... Names>
-    _NODISCARD constexpr std::tuple<Get_method_t_<Object, Names>...> get_methods() const {
+    template <cstd::constexpr_string Name, class... Args>
+    _NODISCARD constexpr Get_method_t_<Object, Name, std::tuple<Args...>> get_method() const {
         return {};
     }
 #endif // HAS_CONSTEXPR_STRING

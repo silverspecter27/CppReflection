@@ -3,17 +3,23 @@
 #define REFLECTION_METHOD_HPP
 #include "ReflectionBase.hpp"
 
+#include <tuple>
+
 __REFLECTION_BEGIN__
 template <class Object, class Ret, class... Args>
 struct Method {
+friend struct Class<Object>;
+
 public:
     using object_type = Object;
     using return_type = Ret;
 
+protected:
     constexpr Method()                         noexcept = default;
     constexpr Method(const Method&)            noexcept = default;
     constexpr Method& operator=(const Method&) noexcept = default;
 
+public:
     _NODISCARD constexpr const Class<Object>& get_declared_class() const noexcept {
         return get_class<Object>();
     }
@@ -39,6 +45,8 @@ public:
 
 template <class Object, class Tag, class Ret, class... Args>
 struct Method_class_ : public Method<Object, Ret, Args...> {
+friend struct Class<Object>;
+
 private:
     using Mybase = Method<Object, Ret, Args...>;
 
@@ -46,10 +54,12 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
+protected:
     constexpr Method_class_()                                noexcept = default;
     constexpr Method_class_(const Method_class_&)            noexcept = default;
     constexpr Method_class_& operator=(const Method_class_&) noexcept = default;
 
+public:
     constexpr Ret invoke(nullptr_t, Args... args) const {
         // You cannot use a nullptr to invoke a non static method.
         return invoke(nullptr, args...);
@@ -79,6 +89,8 @@ template <cstd::constexpr_string Name, class Object, class Ty, class Tag>
 template <class Object, class Ty, class Tag>
 #endif // HAS_CONSTEXPR_STRING
 struct Method_impl_ : public Get_Method_impl_<Object, Tag, Ty>::type {
+friend struct Class<Object>;
+
 private:
     using Mybase = typename Get_Method_impl_<Object, Tag, Ty>::type;
 
@@ -86,10 +98,12 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
+private:
     constexpr Method_impl_()                               noexcept = default;
     constexpr Method_impl_(const Method_impl_&)            noexcept = default;
     constexpr Method_impl_& operator=(const Method_impl_&) noexcept = default;
 
+public:
     _NODISCARD _CONSTEXPR20 const char* name() const noexcept {
 #if HAS_CONSTEXPR_STRING
         return Name.data();
@@ -106,6 +120,8 @@ private:
 
 template <class Object, class Tag, class Ret, class... Args>
 struct StaticMethod_class_ : public Method<Object, Ret, Args...> {
+friend struct Class<Object>;
+
 private:
     using Mybase = Method<Object, Ret, Args...>;
 
@@ -113,10 +129,12 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
+protected:
     constexpr StaticMethod_class_()                                      noexcept = default;
     constexpr StaticMethod_class_(const StaticMethod_class_&)            noexcept = default;
     constexpr StaticMethod_class_& operator=(const StaticMethod_class_&) noexcept = default;
 
+public:
     constexpr Ret invoke(nullptr_t, Args... args) const {
         return (*Get(_tag))(args...);
     }
@@ -145,6 +163,8 @@ template <cstd::constexpr_string Name, class Object, class Ty, class Tag>
 template <class Object, class Ty, class Tag>
 #endif // HAS_CONSTEXPR_STRING
 struct StaticMethod_impl_ : public Get_StaticMethod_impl_<Object, Tag, Ty>::type {
+friend struct Class<Object>;
+
 private:
     using Mybase = typename Get_StaticMethod_impl_<Object, Tag, Ty>::type;
 
@@ -152,10 +172,12 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
+private:
     constexpr StaticMethod_impl_()                                     noexcept = default;
     constexpr StaticMethod_impl_(const StaticMethod_impl_&)            noexcept = default;
     constexpr StaticMethod_impl_& operator=(const StaticMethod_impl_&) noexcept = default;
 
+public:
     _NODISCARD _CONSTEXPR20 const char* name() const noexcept {
 #if HAS_CONSTEXPR_STRING
         return Name.data();
@@ -170,36 +192,47 @@ private:
 #endif // HAS_CONSTEXPR_STRING
 };
 
-template <class Object, class Tag>
+template <class Ty>
+struct Get_method_args_;
+
+template <class Ret, class... Args>
+struct Get_method_args_<Ret(Args...)> {
+    using type = std::tuple<Args...>;
+};
+
+template <class Ty>
+using Get_method_args_t_ = typename Get_method_args_<Ty>::type;
+
+template <class Object, class Tag, class Args>
 struct Get_method_by_tag_;
 
-template <class Object, class Tag>
-using Get_method_by_tag_t_ = typename Get_method_by_tag_<Object, Tag>::type;
+template <class Object, class Tag, class Args>
+using Get_method_by_tag_t_ = typename Get_method_by_tag_<Object, Tag, Args>::type;
 
 #if HAS_CONSTEXPR_STRING
-template <class Object, cstd::constexpr_string Name>
+template <class Object, cstd::constexpr_string Name, class Args>
 struct Get_method_;
 
-template <class Object, cstd::constexpr_string Name>
-using Get_method_t_ = typename Get_method_<Object, Name>::type;
+template <class Object, cstd::constexpr_string Name, class Args>
+using Get_method_t_ = typename Get_method_<Object, Name, Args>::type;
 
-#define DEFINE_METHOD(Type, Name) Method_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Method_##Name##_AccessTag_, __LINE__)>
-#define DEFINE_STATIC_METHOD(Type, Name) StaticMethod_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Method_##Name##_AccessTag_, __LINE__)>
+#define DEFINE_METHOD(Type, Name) Method_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>
+#define DEFINE_STATIC_METHOD(Type, Name) StaticMethod_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>
 
-#define DEFINE_GET_METHOD(Type, Name)                      \
-template<>                                                 \
-struct Get_method_<CONCATENATE(Class_, __LINE__), #Name> { \
-    using type = DEFINE_METHOD(Type, Name);                \
+#define DEFINE_GET_METHOD(Type, Name)                                                \
+template<>                                                                           \
+struct Get_method_<CONCATENATE(Class_, __LINE__), #Name, Get_method_args_t_<Type>> { \
+    using type = DEFINE_METHOD(Type, Name);                                          \
 };
 
-#define DEFINE_GET_STATIC_METHOD(Type, Name)               \
-template<>                                                 \
-struct Get_method_<CONCATENATE(Class_, __LINE__), #Name> { \
-    using type = DEFINE_STATIC_METHOD(Type, Name);         \
+#define DEFINE_GET_STATIC_METHOD(Type, Name)                                         \
+template<>                                                                           \
+struct Get_method_<CONCATENATE(Class_, __LINE__), #Name, Get_method_args_t_<Type>> { \
+    using type = DEFINE_STATIC_METHOD(Type, Name);                                   \
 };
 #else /* ^^^ HAS_CONSTEXPR_STRING ^^^ / vvv HAS_CONSTEXPR_STRING vvv */
-#define DEFINE_METHOD(Type, Name) Method_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Method_##Name##_AccessTag_, __LINE__)>
-#define DEFINE_STATIC_METHOD(Type, Name) StaticMethod_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Method_##Name##_AccessTag_, __LINE__)>
+#define DEFINE_METHOD(Type, Name) Method_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>
+#define DEFINE_STATIC_METHOD(Type, Name) StaticMethod_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>
 
 #define DEFINE_GET_METHOD(Type, Name) const char* DEFINE_METHOD(Type, Name)::_name = #Name;
 #define DEFINE_GET_STATIC_METHOD(Type, Name) const char* DEFINE_STATIC_METHOD(Type, Name)::_name = #Name;
@@ -274,51 +307,53 @@ struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), __COUNTER__> {
 #define GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)
 #endif // HAS_GET_METHODS
 
-#define METHOD(Type, Name)                                                                                        \
-namespace allow_access {                                                                                          \
-    struct CONCATENATE(Method_##Name##_AccessTag_, __LINE__) {};                                                  \
-                                                                                                                  \
-    using CONCATENATE(Method_##Name##_Type, __LINE__) = Type;                                                     \
-                                                                                                                  \
-    template struct private_access<CONCATENATE(Method_##Name##_Type, __LINE__)(CONCATENATE(Class_, __LINE__)::*), \
-        &CONCATENATE(Class_, __LINE__)::Name, CONCATENATE(Method_##Name##_AccessTag_, __LINE__)>;                 \
-                                                                                                                  \
-    constexpr CONCATENATE(Method_##Name##_Type, __LINE__) CONCATENATE(Class_, __LINE__)::*                        \
-        Get(CONCATENATE(Method_##Name##_AccessTag_, __LINE__));                                                   \
-}                                                                                                                 \
-                                                                                                                  \
-struct Name;                                                                                                      \
-                                                                                                                  \
-template <>                                                                                                       \
-struct Get_method_by_tag_<CONCATENATE(Class_, __LINE__), Name> {                                                  \
-    using type = DEFINE_METHOD(Type, Name);                                                                       \
-};                                                                                                                \
-                                                                                                                  \
-DEFINE_GET_METHOD(Type, Name)                                                                                     \
-                                                                                                                  \
+template <class Ty>
+using Method_type_t_ = Ty;
+
+namespace allow_access {
+    template <class Object, class Tag, class Args>
+    struct Get_method_tag_ {
+    };
+}
+
+#define METHOD(Type, Name)                                                                                                     \
+struct Name;                                                                                                                   \
+                                                                                                                               \
+namespace allow_access {                                                                                                       \
+    template struct private_access<Method_type_t_<Type>(CONCATENATE(Class_, __LINE__)::*),                                     \
+        &CONCATENATE(Class_, __LINE__)::Name, Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>; \
+                                                                                                                               \
+    constexpr Method_type_t_<Type> CONCATENATE(Class_, __LINE__)::*                                                            \
+        Get(Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>);                                   \
+}                                                                                                                              \
+                                                                                                                               \
+template <>                                                                                                                    \
+struct Get_method_by_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>> {                                     \
+    using type = DEFINE_METHOD(Type, Name);                                                                                    \
+};                                                                                                                             \
+                                                                                                                               \
+DEFINE_GET_METHOD(Type, Name)                                                                                                  \
+                                                                                                                               \
 GENERATE_METHOD_WITH_INDEX(Type, Name)
 
-#define STATIC_METHOD(Type, Name)                                                                                  \
-namespace allow_access {                                                                                           \
-    struct CONCATENATE(Method_##Name##_AccessTag_, __LINE__) {};                                                   \
-                                                                                                                   \
-    using CONCATENATE(Method_##Name##_Type, __LINE__) = Type;                                                      \
-                                                                                                                   \
-    template struct private_access<CONCATENATE(Method_##Name##_Type, __LINE__)(*),                                 \
-        &CONCATENATE(Class_, __LINE__)::Name, CONCATENATE(Method_##Name##_AccessTag_, __LINE__)>;                  \
-                                                                                                                   \
-    constexpr CONCATENATE(Method_##Name##_Type, __LINE__)* Get(CONCATENATE(Method_##Name##_AccessTag_, __LINE__)); \
-}                                                                                                                  \
-                                                                                                                   \
-struct Name;                                                                                                       \
-                                                                                                                   \
-template <>                                                                                                        \
-struct Get_method_by_tag_<CONCATENATE(Class_, __LINE__), Name> {                                                   \
-    using type = DEFINE_STATIC_METHOD(Type, Name);                                                                 \
-};                                                                                                                 \
-                                                                                                                   \
-DEFINE_GET_STATIC_METHOD(Type, Name)                                                                               \
-                                                                                                                   \
+#define STATIC_METHOD(Type, Name)                                                                                              \
+struct Name;                                                                                                                   \
+                                                                                                                               \
+namespace allow_access {                                                                                                       \
+    template struct private_access<Method_type_t_<Type>(*),                                                                    \
+        &CONCATENATE(Class_, __LINE__)::Name, Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>; \
+                                                                                                                               \
+    constexpr Method_type_t_<Type>*                                                                                            \
+        Get(Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>);                                   \
+}                                                                                                                              \
+                                                                                                                               \
+template <>                                                                                                                    \
+struct Get_method_by_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>> {                                     \
+    using type = DEFINE_STATIC_METHOD(Type, Name);                                                                             \
+};                                                                                                                             \
+                                                                                                                               \
+DEFINE_GET_STATIC_METHOD(Type, Name)                                                                                           \
+                                                                                                                               \
 GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)
 
 #define DECLARE_METHODS(...) __VA_ARGS__

@@ -14,7 +14,7 @@
 
 __REFLECTION_BEGIN__
 namespace allow_access {
-    template <typename PtrType, PtrType PtrValue, typename TagType>
+    template <class PtrType, PtrType PtrValue, class TagType>
     struct private_access {
         _NODISCARD constexpr friend PtrType Get(TagType) {
             return PtrValue;

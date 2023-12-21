@@ -135,8 +135,8 @@ struct Get_field_;
 template <class Object, cstd::constexpr_string Name>
 using Get_field_t_ = typename Get_field_<Object, Name>::type;
 
-#define DEFINE_FIELD(Type, Name) Field_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Field_##Name##_AccessTag_, __LINE__)>
-#define DEFINE_STATIC_FIELD(Type, Name) StaticField_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Field_##Name##_AccessTag_, __LINE__)>
+#define DEFINE_FIELD(Type, Name) Field_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>
+#define DEFINE_STATIC_FIELD(Type, Name) StaticField_impl_<#Name, CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>
 
 #define DEFINE_GET_FIELD(Type, Name)                      \
 template<>                                                \
@@ -150,8 +150,8 @@ struct Get_field_<CONCATENATE(Class_, __LINE__), #Name> { \
     using type = DEFINE_STATIC_FIELD(Type, Name);         \
 };
 #else /* ^^^ HAS_CONSTEXPR_STRING ^^^ / vvv HAS_CONSTEXPR_STRING vvv */
-#define DEFINE_FIELD(Type, Name) Field_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Field_##Name##_AccessTag_, __LINE__)>
-#define DEFINE_STATIC_FIELD(Type, Name) StaticField_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::CONCATENATE(Field_##Name##_AccessTag_, __LINE__)>
+#define DEFINE_FIELD(Type, Name) Field_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>
+#define DEFINE_STATIC_FIELD(Type, Name) StaticField_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>
 
 #define DEFINE_GET_FIELD(Type, Name) const char* DEFINE_FIELD(Type, Name)::_name = #Name;
 #define DEFINE_GET_STATIC_FIELD(Type, Name) const char* DEFINE_STATIC_FIELD(Type, Name)::_name = #Name;
@@ -226,46 +226,48 @@ struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), __COUNTER__> { 
 #define GENERATE_STATIC_FIELD_WITH_INDEX(Type, Name)
 #endif // HAS_GET_FIELDS
 
-#define FIELD(Type, Name)                                                                                  \
-namespace allow_access {                                                                                   \
-    struct CONCATENATE(Field_##Name##_AccessTag_, __LINE__) {};                                            \
-                                                                                                           \
-    template struct private_access<Type(CONCATENATE(Class_, __LINE__)::*),                                 \
-        &CONCATENATE(Class_, __LINE__)::Name, CONCATENATE(Field_##Name##_AccessTag_, __LINE__)>;           \
-                                                                                                           \
-    constexpr Type CONCATENATE(Class_, __LINE__)::* Get(CONCATENATE(Field_##Name##_AccessTag_, __LINE__)); \
-}                                                                                                          \
-                                                                                                           \
-struct Name;                                                                                               \
-                                                                                                           \
-template <>                                                                                                \
-struct Get_field_by_tag_<CONCATENATE(Class_, __LINE__), Name> {                                            \
-    using type = DEFINE_FIELD(Type, Name);                                                                 \
-};                                                                                                         \
-                                                                                                           \
-DEFINE_GET_FIELD(Type, Name)                                                                               \
-                                                                                                           \
+namespace allow_access {
+    template <class Object, class Tag>
+    struct Get_field_tag_ {
+    };
+}
+
+#define FIELD(Type, Name)                                                                                     \
+struct Name;                                                                                                  \
+                                                                                                              \
+namespace allow_access {                                                                                      \
+    template struct private_access<Type(CONCATENATE(Class_, __LINE__)::*),                                    \
+        &CONCATENATE(Class_, __LINE__)::Name, Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>;           \
+                                                                                                              \
+    constexpr Type CONCATENATE(Class_, __LINE__)::* Get(Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>); \
+}                                                                                                             \
+                                                                                                              \
+template <>                                                                                                   \
+struct Get_field_by_tag_<CONCATENATE(Class_, __LINE__), Name> {                                               \
+    using type = DEFINE_FIELD(Type, Name);                                                                    \
+};                                                                                                            \
+                                                                                                              \
+DEFINE_GET_FIELD(Type, Name)                                                                                  \
+                                                                                                              \
 GENERATE_FIELD_WITH_INDEX(Type, Name)
 
-#define STATIC_FIELD(Type, Name)                                                                 \
-namespace allow_access {                                                                         \
-    struct CONCATENATE(Field_##Name##_AccessTag_, __LINE__) {};                                  \
-                                                                                                 \
-    template struct private_access<Type(*),                                                      \
-        &CONCATENATE(Class_, __LINE__)::Name, CONCATENATE(Field_##Name##_AccessTag_, __LINE__)>; \
-                                                                                                 \
-    constexpr Type* Get(CONCATENATE(Field_##Name##_AccessTag_, __LINE__));                       \
-}                                                                                                \
-                                                                                                 \
-struct Name;                                                                                     \
-                                                                                                 \
-template <>                                                                                      \
-struct Get_field_by_tag_<CONCATENATE(Class_, __LINE__), Name> {                                  \
-    using type = DEFINE_STATIC_FIELD(Type, Name);                                                \
-};                                                                                               \
-                                                                                                 \
-DEFINE_GET_STATIC_FIELD(Type, Name)                                                              \
-                                                                                                 \
+#define STATIC_FIELD(Type, Name)                                                                    \
+struct Name;                                                                                        \
+                                                                                                    \
+namespace allow_access {                                                                            \
+    template struct private_access<Type(*),                                                         \
+        &CONCATENATE(Class_, __LINE__)::Name, Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>; \
+                                                                                                    \
+    constexpr Type* Get(Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>);                       \
+}                                                                                                   \
+                                                                                                    \
+template <>                                                                                         \
+struct Get_field_by_tag_<CONCATENATE(Class_, __LINE__), Name> {                                     \
+    using type = DEFINE_STATIC_FIELD(Type, Name);                                                   \
+};                                                                                                  \
+                                                                                                    \
+DEFINE_GET_STATIC_FIELD(Type, Name)                                                                 \
+                                                                                                    \
 GENERATE_STATIC_FIELD_WITH_INDEX(Type, Name)
 __REFLECTION_END__
 
