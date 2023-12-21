@@ -8,13 +8,10 @@
 __REFLECTION_BEGIN__
 template <class Object, class Ret, class... Args>
 struct Method {
-friend struct Class<Object>;
-
 public:
     using object_type = Object;
     using return_type = Ret;
 
-protected:
     constexpr Method()                         noexcept = default;
     constexpr Method(const Method&)            noexcept = default;
     constexpr Method& operator=(const Method&) noexcept = default;
@@ -45,8 +42,6 @@ public:
 
 template <class Object, class Tag, class Ret, class... Args>
 struct Method_class_ : public Method<Object, Ret, Args...> {
-friend struct Class<Object>;
-
 private:
     using Mybase = Method<Object, Ret, Args...>;
 
@@ -54,7 +49,6 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
-protected:
     constexpr Method_class_()                                noexcept = default;
     constexpr Method_class_(const Method_class_&)            noexcept = default;
     constexpr Method_class_& operator=(const Method_class_&) noexcept = default;
@@ -89,8 +83,6 @@ template <cstd::constexpr_string Name, class Object, class Ty, class Tag>
 template <class Object, class Ty, class Tag>
 #endif // HAS_CONSTEXPR_STRING
 struct Method_impl_ : public Get_Method_impl_<Object, Tag, Ty>::type {
-friend struct Class<Object>;
-
 private:
     using Mybase = typename Get_Method_impl_<Object, Tag, Ty>::type;
 
@@ -98,7 +90,6 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
-private:
     constexpr Method_impl_()                               noexcept = default;
     constexpr Method_impl_(const Method_impl_&)            noexcept = default;
     constexpr Method_impl_& operator=(const Method_impl_&) noexcept = default;
@@ -120,8 +111,6 @@ private:
 
 template <class Object, class Tag, class Ret, class... Args>
 struct StaticMethod_class_ : public Method<Object, Ret, Args...> {
-friend struct Class<Object>;
-
 private:
     using Mybase = Method<Object, Ret, Args...>;
 
@@ -129,7 +118,6 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
-protected:
     constexpr StaticMethod_class_()                                      noexcept = default;
     constexpr StaticMethod_class_(const StaticMethod_class_&)            noexcept = default;
     constexpr StaticMethod_class_& operator=(const StaticMethod_class_&) noexcept = default;
@@ -163,8 +151,6 @@ template <cstd::constexpr_string Name, class Object, class Ty, class Tag>
 template <class Object, class Ty, class Tag>
 #endif // HAS_CONSTEXPR_STRING
 struct StaticMethod_impl_ : public Get_StaticMethod_impl_<Object, Tag, Ty>::type {
-friend struct Class<Object>;
-
 private:
     using Mybase = typename Get_StaticMethod_impl_<Object, Tag, Ty>::type;
 
@@ -172,7 +158,6 @@ public:
     using object_type = typename Mybase::object_type;
     using return_type = typename Mybase::return_type;
 
-private:
     constexpr StaticMethod_impl_()                                     noexcept = default;
     constexpr StaticMethod_impl_(const StaticMethod_impl_&)            noexcept = default;
     constexpr StaticMethod_impl_& operator=(const StaticMethod_impl_&) noexcept = default;

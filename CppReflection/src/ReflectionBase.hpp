@@ -8,6 +8,7 @@
 
 #define __REFLECTION_BEGIN__ namespace reflection {
 #define __REFLECTION_END__   }
+#define __REFLECTION__       ::reflection::
 
 #define CONCATENATE_IMPL(x, y) x##y
 #define CONCATENATE(x, y) CONCATENATE_IMPL(x, y)
