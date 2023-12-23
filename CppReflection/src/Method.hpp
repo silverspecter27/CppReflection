@@ -261,32 +261,38 @@ struct Get_methods_ {
 template <class Object>
 using Get_methods_t_ = typename Get_methods_<Object>::type;
 
-#define BEGIN_METHODS                                           \
-template <>                                                     \
-struct Get_start_method_index_<CONCATENATE(Class_, __LINE__)> { \
-    static constexpr std::size_t value = __COUNTER__ + 1;       \
+template <class Object>
+struct Method_counter_tag_;
+
+template <class Object>
+struct Methods_counter_ : cstd::counter<Method_counter_tag_<Object>> {};
+
+#define DECLARE_METHODS(...)                                                                                                                                              \
+template <>                                                                                                                                                               \
+struct Get_start_method_index_<CONCATENATE(Class_, __LINE__)> {                                                                                                           \
+    static constexpr std::size_t value = Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() + 1;                                                        \
+};                                                                                                                                                                        \
+                                                                                                                                                                          \
+__VA_ARGS__                                                                                                                                                               \
+                                                                                                                                                                          \
+template <>                                                                                                                                                               \
+struct Get_methods_amount_<CONCATENATE(Class_, __LINE__)> {                                                                                                               \
+    static constexpr std::size_t value = Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() - Get_start_method_index_v_<CONCATENATE(Class_, __LINE__)>; \
 };
 
-#define END_METHODS                                                                                              \
-template <>                                                                                                      \
-struct Get_methods_amount_<CONCATENATE(Class_, __LINE__)> {                                                      \
-    static constexpr std::size_t value = __COUNTER__ - Get_start_method_index_v_<CONCATENATE(Class_, __LINE__)>; \
+#define GENERATE_METHOD_WITH_INDEX(Type, Name)                                                                                            \
+template <>                                                                                                                               \
+struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>()> { \
+    using type = DEFINE_METHOD(Type, Name);                                                                                               \
 };
 
-#define GENERATE_METHOD_WITH_INDEX(Type, Name)                                   \
-template <>                                                                      \
-struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), __COUNTER__> { \
-    using type = DEFINE_METHOD(Type, Name);                                      \
-};
-
-#define GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)                            \
-template <>                                                                      \
-struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), __COUNTER__> { \
-    using type = DEFINE_STATIC_METHOD(Type, Name);                               \
+#define GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)                                                                                     \
+template <>                                                                                                                               \
+struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>()> { \
+    using type = DEFINE_STATIC_METHOD(Type, Name);                                                                                        \
 };
 #else /* ^^^ HAS_GET_METHODS ^^^ / vvv !HAS_GET_METHODS vvv */
-#define BEGIN_METHODS
-#define END_METHODS
+#define DECLARE_METHODS(...) __VA_ARGS__
 
 #define GENERATE_METHOD_WITH_INDEX(Type, Name)
 #define GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)
@@ -340,8 +346,6 @@ struct Get_method_by_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t
 DEFINE_GET_STATIC_METHOD(Type, Name)                                                                                           \
                                                                                                                                \
 GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)
-
-#define DECLARE_METHODS(...) __VA_ARGS__
 __REFLECTION_END__
 
 #endif // REFLECTION_METHOD_HPP

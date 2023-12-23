@@ -195,32 +195,38 @@ struct Get_fields_ {
 template <class Object>
 using Get_fields_t_ = typename Get_fields_<Object>::type;
 
-#define BEGIN_FIELDS                                           \
-template <>                                                    \
-struct Get_start_field_index_<CONCATENATE(Class_, __LINE__)> { \
-    static constexpr std::size_t value = __COUNTER__ + 1;      \
+template <class Object>
+struct Field_counter_tag_;
+
+template <class Object>
+struct Fields_counter_ : cstd::counter<Field_counter_tag_<Object>> {};
+
+#define DECLARE_FIELDS(...)                                                                                                                                             \
+template <>                                                                                                                                                             \
+struct Get_start_field_index_<CONCATENATE(Class_, __LINE__)> {                                                                                                          \
+    static constexpr std::size_t value = Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() + 1;                                                       \
+};                                                                                                                                                                      \
+                                                                                                                                                                        \
+__VA_ARGS__                                                                                                                                                             \
+                                                                                                                                                                        \
+template <>                                                                                                                                                             \
+struct Get_fields_amount_<CONCATENATE(Class_, __LINE__)> {                                                                                                              \
+    static constexpr std::size_t value = Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() - Get_start_field_index_v_<CONCATENATE(Class_, __LINE__)>; \
 };
 
-#define END_FIELDS                                                                                              \
-template <>                                                                                                     \
-struct Get_fields_amount_<CONCATENATE(Class_, __LINE__)> {                                                      \
-    static constexpr std::size_t value = __COUNTER__ - Get_start_field_index_v_<CONCATENATE(Class_, __LINE__)>; \
+#define GENERATE_FIELD_WITH_INDEX(Type, Name)                                                                                           \
+template <>                                                                                                                             \
+struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>()> { \
+    using type = DEFINE_FIELD(Type, Name);                                                                                              \
 };
 
-#define GENERATE_FIELD_WITH_INDEX(Type, Name)                                   \
-template <>                                                                     \
-struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), __COUNTER__> { \
-    using type = DEFINE_FIELD(Type, Name);                                      \
-};
-
-#define GENERATE_STATIC_FIELD_WITH_INDEX(Type, Name)                            \
-template <>                                                                     \
-struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), __COUNTER__> { \
-    using type = DEFINE_STATIC_FIELD(Type, Name);                               \
+#define GENERATE_STATIC_FIELD_WITH_INDEX(Type, Name)                                                                                    \
+template <>                                                                                                                             \
+struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>()> { \
+    using type = DEFINE_STATIC_FIELD(Type, Name);                                                                                       \
 };
 #else /* ^^^ HAS_GET_FIELDS ^^^ / vvv !HAS_GET_FIELDS vvv */
-#define BEGIN_FIELDS
-#define END_FIELDS
+#define DECLARE_FIELDS(...) __VA_ARGS__
 
 #define GENERATE_FIELD_WITH_INDEX(Type, Name)
 #define GENERATE_STATIC_FIELD_WITH_INDEX(Type, Name)

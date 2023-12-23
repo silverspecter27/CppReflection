@@ -28,17 +28,17 @@ int Test1::test_static_int = 50;
 
 // REFLECT macro to declare the reflection, begin and end fields / methods is  necessary even if none declared
 REFLECT(Test1,
-    BEGIN_FIELDS
-    FIELD(int, test_int)
-    FIELD(std::string, test_str)
+    DECLARE_FIELDS(
+        FIELD(int, test_int)
+        FIELD(std::string, test_str)
 
-    STATIC_FIELD(int, test_static_int)
-    END_FIELDS
+        STATIC_FIELD(int, test_static_int)
+    )
 
-    BEGIN_METHODS
+DECLARE_METHODS(
     METHOD(int& (), test_function)
     METHOD(int& (int), test_function)
-    END_METHODS
+)
 )
 
 // Test class
@@ -67,17 +67,17 @@ int Test2::test_static_int = 100;
 
 // REFLECT macro to declare the reflection, begin and end fields / methods is  necessary even if none declared
 REFLECT(Test2,
-    BEGIN_FIELDS
-    FIELD(int, test_int)
-    FIELD(std::string, test_str)
+    DECLARE_FIELDS(
+        FIELD(int, test_int)
+        FIELD(std::string, test_str)
 
-    STATIC_FIELD(int, test_static_int)
-    END_FIELDS
+        STATIC_FIELD(int, test_static_int)
+    )
 
-    BEGIN_METHODS
+DECLARE_METHODS(
     STATIC_METHOD(int& (), test_function)
     STATIC_METHOD(int& (int), test_function)
-    END_METHODS
+)
 )
 
 int main() {
@@ -93,20 +93,34 @@ int main() {
 
     // loop throught all fields
     cstd::for_each(refl::get_class<Test2>().get_fields(), [&](const auto& field) {
-        std::cout << field.name() << '\n';
+        std::cout << field.get(test2) << '\n';
         });
 
-// if you are using c++ 20 or above this #if is not necessary
+    std::cout << '\n';
+
+    // loop throught all methods
+    cstd::for_each(refl::get_class<Test1>().get_methods(), [&](const auto& method) {
+        std::cout << method.name() << '\n';
+        });
+
+    std::cout << '\n';
+
+    // loop throught all methods
+    cstd::for_each(refl::get_class<Test2>().get_methods(), [&](const auto& method) {
+        std::cout << method.name() << '\n';
+        });
+
+    // if you are using c++ 20 or above this #if is not necessary
 #if HAS_CONSTEXPR_STRING
     std::cout << '\n';
 
-    // get method using a string c++ 20 or above
-    std::cout << refl::get_class<Test1>().get_field<"test_int">()(test1) << '\n';
+    // get field using a string c++ 20 or above
+    std::cout << refl::get_class<Test1>().get_field<"test_int">().get(test1) << '\n';
 
     std::cout << '\n';
 
-    // get method using a string c++ 20 or above
-    std::cout << refl::get_class<Test2>().get_field<"test_static_int">()(nullptr) << '\n';
+    // get field using a string c++ 20 or above
+    std::cout << refl::get_class<Test2>().get_field<"test_static_int">().get(nullptr) << '\n';
 
     std::cout << '\n';
 
@@ -122,12 +136,12 @@ int main() {
     std::cout << '\n';
 
     // changing field value using a tag
-    refl::get_class<Test1>().get_field<refl::test_int>()(test1) = 50;
+    refl::get_class<Test1>().get_field<refl::test_int>().get(test1) = 50;
 
     std::cout << '\n';
 
     // get field using a tag
-    refl::get_class<Test2>().get_field<refl::test_static_int>()(nullptr) = 75;
+    refl::get_class<Test2>().get_field<refl::test_static_int>().get(nullptr) = 75;
 
     std::cout << '\n';
 
