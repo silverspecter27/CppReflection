@@ -1,6 +1,7 @@
 #pragma once
 #ifndef REFLECTION_BASE_HPP
 #define REFLECTION_BASE_HPP
+#include "vals_core.hpp"
 
 #include <utility>
 
@@ -10,9 +11,6 @@
 #define __REFLECTION_BEGIN__ namespace reflection {
 #define __REFLECTION_END__   }
 #define __REFLECTION__       ::reflection::
-
-#define CONCATENATE_IMPL(x, y) x##y
-#define CONCATENATE(x, y) CONCATENATE_IMPL(x, y)
 
 __REFLECTION_BEGIN__
 namespace allow_access {
@@ -37,7 +35,7 @@ namespace test = reflection;
 __REFLECTION_END__
 
 namespace cstd {
-#if _HAS_CXX17
+#if CSTD_BINARY_LOOKUP
     template <class Func, class Tuple, std::size_t Index>
     constexpr void For_each_impl(const Tuple& tuple, Func&& func) {
         (void)func(std::get<Index>(tuple));
@@ -46,7 +44,7 @@ namespace cstd {
             For_each_impl<Func, Tuple, Index + 1>(tuple, std::move(func));
         }
     }
-#else /* ^^^ _HAS_CXX17 ^^^ / vvv !_HAS_CXX17 vvv */
+#else /* ^^^ CSTD_BINARY_LOOKUP ^^^ / vvv !CSTD_BINARY_LOOKUP vvv */
     template <class Func, class Tuple, std::size_t Index, bool Stop>
     struct For_each_impl_;
 
@@ -68,7 +66,7 @@ namespace cstd {
     constexpr void For_each_impl(const Tuple& tuple, Func&& func) {
         For_each_impl_ < Func, Tuple, 0, 1 < std::tuple_size_v<Tuple> > ::operate(tuple, std::move(func));
     }
-#endif // _HAS_CXX17
+#endif // CSTD_BINARY_LOOKUP
 
     template <class Func, class Tuple>
     constexpr void for_each(const Tuple& tuple, Func&& func) {

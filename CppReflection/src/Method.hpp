@@ -280,6 +280,18 @@ struct Get_methods_amount_<CONCATENATE(Class_, __LINE__)> {                     
     static constexpr std::size_t value = Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() - Get_start_method_index_v_<CONCATENATE(Class_, __LINE__)>; \
 };
 
+#define BEGIN_METHODS                                                                                              \
+template <>                                                                                                        \
+struct Get_start_method_index_<CONCATENATE(Class_, __LINE__)> {                                                    \
+    static constexpr std::size_t value = Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() + 1; \
+};
+
+#define END_METHODS                                                                                                                                                       \
+template <>                                                                                                                                                               \
+struct Get_methods_amount_<CONCATENATE(Class_, __LINE__)> {                                                                                                               \
+    static constexpr std::size_t value = Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() - Get_start_method_index_v_<CONCATENATE(Class_, __LINE__)>; \
+};
+
 #define GENERATE_METHOD_WITH_INDEX(Type, Name)                                                                                            \
 template <>                                                                                                                               \
 struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), Methods_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>()> { \
@@ -293,6 +305,8 @@ struct Get_method_type_with_index_<CONCATENATE(Class_, __LINE__), Methods_counte
 };
 #else /* ^^^ HAS_GET_METHODS ^^^ / vvv !HAS_GET_METHODS vvv */
 #define DECLARE_METHODS(...) __VA_ARGS__
+#define BEGIN_METHODS
+#define END_METHODS
 
 #define GENERATE_METHOD_WITH_INDEX(Type, Name)
 #define GENERATE_STATIC_METHOD_WITH_INDEX(Type, Name)

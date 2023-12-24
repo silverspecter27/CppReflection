@@ -214,6 +214,18 @@ struct Get_fields_amount_<CONCATENATE(Class_, __LINE__)> {                      
     static constexpr std::size_t value = Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() - Get_start_field_index_v_<CONCATENATE(Class_, __LINE__)>; \
 };
 
+#define BEGIN_FIELDS                                                                                                                                                    \
+template <>                                                                                                                                                             \
+struct Get_start_field_index_<CONCATENATE(Class_, __LINE__)> {                                                                                                          \
+    static constexpr std::size_t value = Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() + 1;                                                       \
+};                                                                                                                                                                      \
+
+#define END_FIELDS                                                                                                                                                      \
+template <>                                                                                                                                                             \
+struct Get_fields_amount_<CONCATENATE(Class_, __LINE__)> {                                                                                                              \
+    static constexpr std::size_t value = Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>() - Get_start_field_index_v_<CONCATENATE(Class_, __LINE__)>; \
+};
+
 #define GENERATE_FIELD_WITH_INDEX(Type, Name)                                                                                           \
 template <>                                                                                                                             \
 struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), Fields_counter_<CONCATENATE(Class_, __LINE__)>::next<__COUNTER__>()> { \
@@ -227,6 +239,8 @@ struct Get_field_type_with_index_<CONCATENATE(Class_, __LINE__), Fields_counter_
 };
 #else /* ^^^ HAS_GET_FIELDS ^^^ / vvv !HAS_GET_FIELDS vvv */
 #define DECLARE_FIELDS(...) __VA_ARGS__
+#define BEGIN_FIELDS
+#define END_FIELDS
 
 #define GENERATE_FIELD_WITH_INDEX(Type, Name)
 #define GENERATE_STATIC_FIELD_WITH_INDEX(Type, Name)

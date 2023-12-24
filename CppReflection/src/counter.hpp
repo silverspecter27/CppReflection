@@ -1,18 +1,7 @@
 #pragma once
-
 #ifndef CSTD_COUNTER_HPP
 #define CSTD_COUNTER_HPP
-
-#if !defined(__cpp_if_constexpr) || __cpp_if_constexpr < 201606L
-#if defined(CSTD_BINARY_LOOKUP) && CSTD_BINARY_LOOKUP
-#error "Binary lookup is only available when compiling with c++17 and above"
-#endif
-
-#undef CSTD_BINARY_LOOKUP
-#define CSTD_BINARY_LOOKUP 0
-#elif !defined(CSTD_BINARY_LOOKUP)
-#define CSTD_BINARY_LOOKUP 1
-#endif
+#include "vals_core.hpp"
 
 #if defined(__GNUC__) && !defined(__clang__)
 // There appears to be a bug on gcc that makes it emit a diagnostic that cannot be turned off in certain conditions. This will silence it.
@@ -127,7 +116,7 @@ namespace cstd {
                 return current<Unique, Value + (1 << (Period - 1)), 0>(0);
             }
         }
-#else /* ^^^ CSTD_BINARY_LOOKUP ^^^ / vvv CSTD_BINARY_LOOKUP vvv */
+#else /* ^^^ CSTD_BINARY_LOOKUP ^^^ / vvv !CSTD_BINARY_LOOKUP vvv */
         template <class Unique, int Value = 0, bool = slot_allocated(slot<Value>())>
         static constexpr int next(int) {
             return next<Unique, Value + 1>(0);
