@@ -35,10 +35,10 @@ REFLECT(Test1,
         STATIC_FIELD(int, test_static_int)
     )
 
-DECLARE_METHODS(
-    METHOD(int& (), test_function)
-    METHOD(int& (int), test_function)
-)
+    DECLARE_METHODS(
+        METHOD(int& (), test_function)
+        METHOD(int& (int), test_function)
+    )
 )
 
 // Test class
@@ -74,13 +74,16 @@ REFLECT(Test2,
         STATIC_FIELD(int, test_static_int)
     )
 
-DECLARE_METHODS(
-    STATIC_METHOD(int& (), test_function)
-    STATIC_METHOD(int& (int), test_function)
-)
+    DECLARE_METHODS(
+        STATIC_METHOD(int& (), test_function)
+        STATIC_METHOD(int& (int), test_function)
+    )
 )
 
 int main() {
+    // namespace of all reflection tags
+    using namespace refl::tag;
+
     Test1 test1{ 25,  "Hello World!" };
     Test2 test2{ 50, "Bye Bye World!" };
 
@@ -136,20 +139,20 @@ int main() {
     std::cout << '\n';
 
     // changing field value using a tag
-    refl::get_class<Test1>().get_field<refl::test_int>().get(test1) = 50;
+    refl::get_class<Test1>().get_field<test_int>().get(test1) = 50;
 
     std::cout << '\n';
 
     // get field using a tag
-    refl::get_class<Test2>().get_field<refl::test_static_int>().get(nullptr) = 75;
+    refl::get_class<Test2>().get_field<test_static_int>().get(nullptr) = 75;
 
     std::cout << '\n';
 
     // get method using a tag and using parameters
-    std::cout << refl::get_class<Test1>().get_method<refl::test_function, int>()(test1, 25) << '\n';
+    std::cout << refl::get_class<Test1>().get_method<test_function, int>()(test1, 25) << '\n';
 
     std::cout << '\n';
 
     // get method using a tag and using parameters
-    std::cout << refl::get_class<Test2>().get_method<refl::test_function, int>()(nullptr, 75) << '\n';
+    std::cout << refl::get_class<Test2>().get_method<test_function, int>()(nullptr, 75) << '\n';
 }
