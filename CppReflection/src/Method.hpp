@@ -216,8 +216,8 @@ struct Get_method_<CONCATENATE(Class_, __LINE__), #Name, Get_method_args_t_<Type
     using type = DEFINE_STATIC_METHOD(Type, Name);                                   \
 };
 #else /* ^^^ HAS_CONSTEXPR_STRING ^^^ / vvv HAS_CONSTEXPR_STRING vvv */
-#define DEFINE_METHOD(Type, Name) Method_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>
-#define DEFINE_STATIC_METHOD(Type, Name) StaticMethod_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), Name, Get_method_args_t_<Type>>>
+#define DEFINE_METHOD(Type, Name) Method_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), tag::Name, Get_method_args_t_<Type>>>
+#define DEFINE_STATIC_METHOD(Type, Name) StaticMethod_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_method_tag_<CONCATENATE(Class_, __LINE__), tag::Name, Get_method_args_t_<Type>>>
 
 #define DEFINE_GET_METHOD(Type, Name) const char* DEFINE_METHOD(Type, Name)::_name = #Name;
 #define DEFINE_GET_STATIC_METHOD(Type, Name) const char* DEFINE_STATIC_METHOD(Type, Name)::_name = #Name;

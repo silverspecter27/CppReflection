@@ -152,8 +152,8 @@ struct Get_field_<CONCATENATE(Class_, __LINE__), #Name> { \
     using type = DEFINE_STATIC_FIELD(Type, Name);         \
 };
 #else /* ^^^ HAS_CONSTEXPR_STRING ^^^ / vvv HAS_CONSTEXPR_STRING vvv */
-#define DEFINE_FIELD(Type, Name) Field_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>
-#define DEFINE_STATIC_FIELD(Type, Name) StaticField_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), Name>>
+#define DEFINE_FIELD(Type, Name) Field_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), tag::Name>>
+#define DEFINE_STATIC_FIELD(Type, Name) StaticField_impl_<CONCATENATE(Class_, __LINE__), Type, allow_access::Get_field_tag_<CONCATENATE(Class_, __LINE__), tag::Name>>
 
 #define DEFINE_GET_FIELD(Type, Name) const char* DEFINE_FIELD(Type, Name)::_name = #Name;
 #define DEFINE_GET_STATIC_FIELD(Type, Name) const char* DEFINE_STATIC_FIELD(Type, Name)::_name = #Name;

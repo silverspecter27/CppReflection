@@ -10,7 +10,7 @@ __REFLECTION_BEGIN__
 template <class Object>
 struct Class final {
     template <class UObject>
-    friend constexpr const Class<UObject> get_class() noexcept;
+    friend constexpr const Class<Raw_object_t<UObject>> get_class() noexcept;
 
 public:
     using object_type = Object;
@@ -67,6 +67,18 @@ public:
     }
 #endif // HAS_GET_METHODS
 
+    _NODISCARD constexpr bool is_array() const noexcept {
+        return std::is_array_v<Object>;
+    }
+
+    _NODISCARD constexpr bool is_enum() const noexcept {
+        return std::is_enum_v<Object>;
+    }
+
+    _NODISCARD constexpr bool is_primitive() const noexcept {
+        return std::is_fundamental_v<Object>;
+    }
+
     _NODISCARD inline const char* name() const noexcept {
         return typeid(Object).name();
     }
@@ -81,16 +93,21 @@ public:
 };
 
 template <class Object>
-_NODISCARD constexpr const Class<Object> get_class() noexcept {
+struct Raw_object {
+    using type = std::remove_volatile_t<std::remove_const_t<std::remove_reference_t<Object>>>;
+};
+
+template <class Object>
+_NODISCARD constexpr const Class<Raw_object_t<Object>> get_class() noexcept {
     return {};
 }
 __REFLECTION_END__
 
-#define REFLECT(Object, ...)                  \
-__REFLECTION_BEGIN__                          \
-using CONCATENATE(Class_, __LINE__) = Object; \
-                                              \
-__VA_ARGS__                                   \
+#define REFLECT(Object, ...)                                \
+__REFLECTION_BEGIN__                                        \
+using CONCATENATE(Class_, __LINE__) = Raw_object_t<Object>; \
+                                                            \
+__VA_ARGS__                                                 \
 __REFLECTION_END__
 
 #endif // REFLECTION_CLASS_HPP

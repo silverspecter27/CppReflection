@@ -29,7 +29,13 @@ template <class Object>
 struct Class;
 
 template <class Object>
-_NODISCARD constexpr const Class<Object> get_class() noexcept;
+struct Raw_object;
+
+template <class Object>
+using Raw_object_t = typename Raw_object<Object>::type;
+
+template <class Object>
+_NODISCARD constexpr const Class<Raw_object_t<Object>> get_class() noexcept;
 
 namespace test = reflection;
 __REFLECTION_END__
