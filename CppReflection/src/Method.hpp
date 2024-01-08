@@ -25,15 +25,9 @@ public:
         return typeid(Method).hash_code();
     }
 
-    constexpr Ret operator()(nullptr_t, Args... args) const {
-        return invoke(nullptr, args...);
-    }
-
     constexpr Ret operator()(Object& object, Args... args) const {
         return invoke(object, args...);
     }
-
-    virtual _CONSTEXPR20 Ret invoke(nullptr_t, Args... args) const = 0;
 
     virtual _CONSTEXPR20 Ret invoke(Object& object, Args... args) const = 0;
 
@@ -54,11 +48,6 @@ public:
     constexpr Method_class_& operator=(const Method_class_&) noexcept = default;
 
 public:
-    constexpr Ret invoke(nullptr_t, Args... args) const {
-        // You cannot use a nullptr to invoke a non static method.
-        return invoke(nullptr, args...);
-    }
-
     constexpr Ret invoke(Object& object, Args... args) const {
         return (object.*Get(_tag))(args...);
     }
@@ -109,20 +98,32 @@ private:
 #endif // HAS_CONSTEXPR_STRING
 };
 
+template <class Ret, class... Args>
+struct StaticMethod_base_ : Static_base_<Ret, Args...> {
+    constexpr Ret operator()(nullptr_t, Args... args) const {
+        return invoke(nullptr, args...);
+    }
+
+    virtual _CONSTEXPR20 Ret invoke(nullptr_t, Args... args) const = 0;
+};
+
 template <class Object, class Tag, class Ret, class... Args>
-struct StaticMethod_class_ : public Method<Object, Ret, Args...> {
+struct StaticMethod_class_ : public Method<Object, Ret, Args...>, StaticMethod_base_<Ret, Args...> {
 private:
-    using Mybase = Method<Object, Ret, Args...>;
+    using Mybase1 = Method<Object, Ret, Args...>;
+    using Mybase2 = StaticMethod_base_<Ret, Args...>;
 
 public:
-    using object_type = typename Mybase::object_type;
-    using return_type = typename Mybase::return_type;
+    using object_type = typename Mybase1::object_type;
+    using return_type = typename Mybase1::return_type;
 
     constexpr StaticMethod_class_()                                      noexcept = default;
     constexpr StaticMethod_class_(const StaticMethod_class_&)            noexcept = default;
     constexpr StaticMethod_class_& operator=(const StaticMethod_class_&) noexcept = default;
 
 public:
+    using Mybase2::operator();
+
     constexpr Ret invoke(nullptr_t, Args... args) const {
         return (*Get(_tag))(args...);
     }

@@ -25,23 +25,26 @@ namespace allow_access {
 template <class>
 constexpr bool Always_false = false;
 
+template <class Ty, class... Args>
+struct Static_base_ {
+    virtual _NODISCARD _CONSTEXPR20 Ty operator()(nullptr_t, Args...) const = 0;
+};
+
 template <class Object>
 struct Class;
 
 template <class Object>
-struct Raw_object;
+struct Raw_object_;
 
 template <class Object>
-using Raw_object_t = typename Raw_object<Object>::type;
+using Raw_object_t_ = typename Raw_object_<Object>::type;
 
 template <class Object>
-_NODISCARD constexpr const Class<Raw_object_t<Object>> get_class() noexcept;
-
-namespace test = reflection;
+_NODISCARD constexpr const Class<Raw_object_t_<Object>> get_class() noexcept;
 __REFLECTION_END__
 
 namespace cstd {
-#if CSTD_BINARY_LOOKUP
+#if 1 // CSTD_BINARY_LOOKUP
     template <class Func, class Tuple, std::size_t Index>
     constexpr void For_each_impl(const Tuple& tuple, Func&& func) {
         (void)func(std::get<Index>(tuple));

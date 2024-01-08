@@ -24,7 +24,9 @@ public:
         return typeid(Field).hash_code();
     }
 
-    virtual _NODISCARD _CONSTEXPR20 Ty& get(nullptr_t) const = 0;
+    _NODISCARD constexpr Ty& operator()(Object& object) const {
+        return get(object);
+    }
 
     virtual _NODISCARD _CONSTEXPR20 Ty& get(Object& object) const = 0;
 
@@ -50,11 +52,6 @@ public:
     constexpr Field_impl_(const Field_impl_&)            noexcept = default;
     constexpr Field_impl_& operator=(const Field_impl_&) noexcept = default;
 
-    _NODISCARD constexpr Ty& get(nullptr_t) const {
-        // You cannot use a nullptr to access a non static field.
-        return get(nullptr);
-    }
-
     _NODISCARD constexpr Ty& get(Object& object) const {
         return object.*Get(_tag);
     }
@@ -79,22 +76,34 @@ private:
 #endif // HAS_CONSTEXPR_STRING
 };
 
+template <class Ty>
+struct StaticField_base_ : Static_base_<Ty&> {
+    _NODISCARD constexpr Ty& operator()(nullptr_t) const {
+        return get(nullptr);
+    }
+
+    virtual _NODISCARD _CONSTEXPR20 Ty& get(nullptr_t) const = 0;
+};
+
 #if HAS_CONSTEXPR_STRING
 template <cstd::constexpr_string Name, class Object, class Ty, class Tag>
 #else /* ^^^ HAS_CONSTEXPR_STRING ^^^ / vvv HAS_CONSTEXPR_STRING vvv */
 template <class Object, class Ty, class Tag>
 #endif // HAS_CONSTEXPR_STRING
-struct StaticField_impl_ : public Field<Object, Ty> {
+struct StaticField_impl_ : public Field<Object, Ty>, StaticField_base_<Ty> {
 private:
-    using Mybase = Field<Object, Ty>;
+    using Mybase1 = Field<Object, Ty>;
+    using Mybase2 = StaticField_base_<Ty>;
 
 public:
-    using object_type = typename Mybase::object_type;
-    using value_type  = typename Mybase::value_type;
+    using object_type = typename Mybase1::object_type;
+    using value_type  = typename Mybase1::value_type;
 
     constexpr StaticField_impl_()                                    = default;
     constexpr StaticField_impl_(const StaticField_impl_&)            = default;
     constexpr StaticField_impl_& operator=(const StaticField_impl_&) = default;
+
+    using Mybase2::operator();
 
     _NODISCARD constexpr Ty& get(nullptr_t) const {
         return *Get(_tag);
