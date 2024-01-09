@@ -44,7 +44,7 @@ _NODISCARD constexpr const Class<Raw_object_t_<Object>> get_class() noexcept;
 __REFLECTION_END__
 
 namespace cstd {
-#if 1 // CSTD_BINARY_LOOKUP
+#if CSTD_BINARY_LOOKUP
     template <class Func, class Tuple, std::size_t Index>
     constexpr void For_each_impl(const Tuple& tuple, Func&& func) {
         (void)func(std::get<Index>(tuple));

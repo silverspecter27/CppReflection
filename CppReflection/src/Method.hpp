@@ -16,7 +16,6 @@ public:
     constexpr Method(const Method&)            noexcept = default;
     constexpr Method& operator=(const Method&) noexcept = default;
 
-public:
     _NODISCARD constexpr const Class<Object>& get_declared_class() const noexcept {
         return get_class<Object>();
     }
@@ -47,7 +46,6 @@ public:
     constexpr Method_class_(const Method_class_&)            noexcept = default;
     constexpr Method_class_& operator=(const Method_class_&) noexcept = default;
 
-public:
     constexpr Ret invoke(Object& object, Args... args) const {
         return (object.*Get(_tag))(args...);
     }
@@ -63,6 +61,11 @@ struct Get_Method_impl_ {
 
 template <class Object, class Tag, class Ret, class... Args>
 struct Get_Method_impl_<Object, Tag, Ret(Args...)> {
+    using type = Method_class_<Object, Tag, Ret, Args...>;
+};
+
+template <class Object, class Tag, class Ret, class... Args>
+struct Get_Method_impl_<Object, Tag, Ret(Args...) const> {
     using type = Method_class_<Object, Tag, Ret, Args...>;
 };
 
@@ -83,7 +86,6 @@ public:
     constexpr Method_impl_(const Method_impl_&)            noexcept = default;
     constexpr Method_impl_& operator=(const Method_impl_&) noexcept = default;
 
-public:
     _NODISCARD _CONSTEXPR20 const char* name() const noexcept {
 #if HAS_CONSTEXPR_STRING
         return Name.data();
@@ -121,7 +123,6 @@ public:
     constexpr StaticMethod_class_(const StaticMethod_class_&)            noexcept = default;
     constexpr StaticMethod_class_& operator=(const StaticMethod_class_&) noexcept = default;
 
-public:
     using Mybase2::operator();
 
     constexpr Ret invoke(nullptr_t, Args... args) const {
@@ -143,6 +144,11 @@ struct Get_StaticMethod_impl_ {
 
 template <class Object, class Tag, class Ret, class... Args>
 struct Get_StaticMethod_impl_<Object, Tag, Ret(Args...)> {
+    using type = StaticMethod_class_<Object, Tag, Ret, Args...>;
+};
+
+template <class Object, class Tag, class Ret, class... Args>
+struct Get_StaticMethod_impl_<Object, Tag, Ret(Args...) const> {
     using type = StaticMethod_class_<Object, Tag, Ret, Args...>;
 };
 
@@ -183,6 +189,11 @@ struct Get_method_args_;
 
 template <class Ret, class... Args>
 struct Get_method_args_<Ret(Args...)> {
+    using type = std::tuple<Args...>;
+};
+
+template <class Ret, class... Args>
+struct Get_method_args_<Ret(Args...) const> {
     using type = std::tuple<Args...>;
 };
 
